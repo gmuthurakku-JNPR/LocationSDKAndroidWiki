@@ -1,0 +1,116 @@
+defaults: &defaults
+  macos:
+      xcode: "10.2.1"
+  shell: /bin/bash --login -eo pipefail
+  environment:
+    SCAN_DEVICE: iPhone 8
+    FL_OUTPUT_DIR: output
+    LC_ALL: en_US.UTF-8
+    LANG: en_US.UTF-8
+    TEST_RESULTS: /tmp/test-results
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: pre-start simulator
+          command: |
+            xcrun instruments -w "${SCAN_DEVICE} (11.4) [" || sleep 15
+      - restore_cache:
+            key: gem-{{ checksum "Gemfile.lock" }}
+      - run: | 
+            chruby 2.4.6
+            gem install bundler
+            bundle install
+      - save_cache:
+          key: gem-{{ checksum "Gemfile.lock" }}
+          paths: 
+            - ~/.bundle
+      - run:
+          name: fetch cocoapods specs
+          command: |
+            curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
+      - restore_cache:
+          key: pod-{{ checksum "Podfile.lock" }}
+      - run: | 
+            pod install
+      - save_cache:
+          key: pod-{{ checksum "Podfile.lock" }}
+          paths: 
+            - "Pods"
+      - run:
+          name: test
+          command: |
+            chruby 2.4.6
+            gem install bundler
+            bundle exec fastlane ios test
+            cp -Rf output $TEST_RESULTS || true
+      - store_artifacts:
+          path: /tmp/test-results
+      - store_test_results:
+          path: /tmp/test-results
+      - run:
+          name: tagging
+          command: |
+            git clone ssh://git@github.com/mistsys/mist-ci --depth 1 --quiet
+            mist-ci/ci_tagging.sh -t
+            touch BUILD_SUCCESS
+      - run:
+            scripts/ci_slack.sh
+
+  release:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: tagging
+          command: |
+            git clone ssh://git@github.com/mistsys/mist-ci --depth 1 --quiet	
+            mist-ci/ci_tagging.sh -t
+      - restore_cache:
+          key: gem-{{ checksum "Gemfile.lock" }}
+      - run: | 
+            chruby 2.4.6
+            gem install bundler
+            bundle install
+      - save_cache:
+          key: gem-{{ checksum "Gemfile.lock" }}
+          paths: 
+            - ~/.bundle
+      - run:
+          name: fetch cocoapods specs
+          command: |
+            curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
+      - restore_cache:
+            key: pod-{{ checksum "Podfile.lock" }}
+      - run: | 
+          pod install
+      - save_cache:
+          key: pod-{{ checksum "Podfile.lock" }}
+          paths: 
+            - "Pods"
+      - run:
+          name: Build and release
+          no_output_timeout: 20m
+          command: |
+            chruby 2.4.6
+            gem install bundler
+            bundle exec fastlane ios beta_all
+
+workflows:
+  version: 2
+  all:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+                - working
+      - release:
+          filters:
+            branches:
+              only: release

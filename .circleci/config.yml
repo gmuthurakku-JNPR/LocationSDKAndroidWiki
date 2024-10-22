@@ -3,12 +3,42 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.8  # Use the cimg namespace for Python 3.8
     steps:
       - checkout
+
+      - run:
+          name: DETERMINE BUILD TAG BASED ON BRANCH
+          command: |
+            # Check if CIRCLE_BRANCH is set
+            if [ -z "$CIRCLE_BRANCH" ]; then
+              echo "CIRCLE_BRANCH is not set"
+              exit 1
+            fi
+
+            # Get the branch name
+            branch_name=$(echo ${CIRCLE_BRANCH} | sed 's/\//-/g')  # Replace slashes with dashes
+            
+            # Conditional logic to set the appropriate tag
+            if [ "$CIRCLE_BRANCH" == "master" ]; then
+              tag="Master"
+            elif [ "$CIRCLE_BRANCH" == "staging" ]; then
+              tag="Staging"
+            else
+              tag="Feature-${branch_name}"
+            fi
+
+            # Print the determined tag for debugging
+            echo "Build Tag: ${tag}"
+
+            # Optionally, set the tag as an environment variable
+            echo "export BUILD_TAG=${tag}" >> $BASH_ENV
+
       - run:
           name: Run Tests
-          command: echo "Running tests..."
+          command: |
+            echo "Running tests for tag: ${BUILD_TAG}"
+            # Here, you can add commands to run your actual tests, e.g., pytest or any other testing framework
 
 workflows:
   version: 2
@@ -18,4 +48,6 @@ workflows:
           filters:
             branches:
               only:
-                - master  # Change this to your branch name for testing
+                - master
+                - staging
+                - feature/test-branch  # Include other branches as needed

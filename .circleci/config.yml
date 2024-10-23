@@ -6,7 +6,7 @@ jobs:
       xcode: 15.4.0
     steps:
       - checkout
-    
+
       - run:
           name: SET BUILD TAG BASED ON BRANCH
           command: |
@@ -20,13 +20,15 @@ jobs:
             else
               tag="Feature-${branch_name}"
             fi
-            
-            # Check if uploadMetadata exists, if not add it
-            if /usr/libexec/PlistBuddy -c "Print :uploadMetadata" $plist_path; then
-              /usr/libexec/PlistBuddy -c "Set :uploadMetadata '${tag} Build'" $plist_path
-            else
-              /usr/libexec/PlistBuddy -c "Add :uploadMetadata string '${tag} Build'" $plist_path
-            fi
+            echo '${tag} Build'
+            /usr/libexec/PlistBuddy -c "Set :uploadMetadata '${tag} Build'" $plist_path
+
+      - run:
+          name: PRINT LATEST plist CONTENTS
+          command: |
+            plist_path="./distribution/ExportOptions.plist"
+            echo "Current contents of $plist_path:"
+            /usr/libexec/PlistBuddy -c "Print" $plist_path
 
 workflows:
   build_and_release:

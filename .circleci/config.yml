@@ -1,25 +1,18 @@
 version: 2.1
 
 jobs:
-  build:
-    docker:
-      - image: cimg/python:3.8  # Use the cimg namespace for Python 3.8
+  build_and_release:
+    macos:
+      xcode: 15.4.0
     steps:
       - checkout
-
+    
       - run:
-          name: DETERMINE BUILD TAG BASED ON BRANCH
+          name: SET BUILD TAG BASED ON BRANCH
           command: |
-            # Check if CIRCLE_BRANCH is set
-            if [ -z "$CIRCLE_BRANCH" ]; then
-              echo "CIRCLE_BRANCH is not set"
-              exit 1
-            fi
-
-            # Get the branch name
-            branch_name=$(echo ${CIRCLE_BRANCH} | sed 's/\//-/g')  # Replace slashes with dashes
+            plist_path="./distribution/ExportOptions.plist"
+            branch_name=$(echo ${CIRCLE_BRANCH} | sed 's/\//-/g')
             
-            # Conditional logic to set the appropriate tag
             if [ "$CIRCLE_BRANCH" == "master" ]; then
               tag="Master"
             elif [ "$CIRCLE_BRANCH" == "staging" ]; then
@@ -27,27 +20,15 @@ jobs:
             else
               tag="Feature-${branch_name}"
             fi
-
-            # Print the determined tag for debugging
-            echo "Build Tag: ${tag}"
-
-            # Optionally, set the tag as an environment variable
-            echo "export BUILD_TAG=${tag}" >> $BASH_ENV
-
-      - run:
-          name: Run Tests
-          command: |
-            echo "Running tests for tag: ${BUILD_TAG}"
-            # Here, you can add commands to run your actual tests, e.g., pytest or any other testing framework
+            
+            # Check if uploadMetadata exists, if not add it
+            if /usr/libexec/PlistBuddy -c "Print :uploadMetadata" $plist_path; then
+              /usr/libexec/PlistBuddy -c "Set :uploadMetadata '${tag} Build'" $plist_path
+            else
+              /usr/libexec/PlistBuddy -c "Add :uploadMetadata string '${tag} Build'" $plist_path
+            fi
 
 workflows:
-  version: 2
-  build_and_test:
+  build_and_release:
     jobs:
-      - build:
-          filters:
-            branches:
-              only:
-                - master
-                - staging
-                - feature/test-branch  # Include other branches as needed
+      - build_and_release

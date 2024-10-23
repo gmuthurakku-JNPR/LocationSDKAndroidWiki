@@ -23,5 +23,7 @@
 	<string>S6W43QBW7N</string>
 	<key>uploadSymbols</key>
 	<false/>
+	<key>uploadMetadata</key>
+	<string>Staging</string>
 </dict>
 </plist>

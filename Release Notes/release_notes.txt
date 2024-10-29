@@ -1,0 +1,11 @@
+1. "MIST-123051: Mist AI [iOS] - Automated Build and Deployment",
+2. "MIST-103965: Mist AI [iOS]- Users are unable to login using SSO when customer require conditional access and device ID",
+3. "MIST-119456: Mist AI [iOS] - Support for All Environments",
+4. "MIST-122556: Mist AI[iOS] - App support for new AP47 model",
+5. "MIST-66155: Mist AI [iOS] - Add EX4100 and EX4100-F images",
+6. "MIST-83377: Mist AI [iOS] - Saving biometrics flow needs to be checked",
+7. "MIST-124586: Mist AI [iOS] - Inform users about network issues while adding device photos",
+8. "MIST-124107: Mist AI [iOS] - User is incorrectly directed to Mist web UI portal login page instead of App login page after clicking on 'Take me Back to Sign In' button on Forgot Password",
+9. "MIST-75211: Mist AI [iOS] - User(s) should be directed to their devices' respective tabs after selecting the site field on Detail pages"
+10. Updated release notes
+

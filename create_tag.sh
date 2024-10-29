@@ -10,8 +10,8 @@ CIRCLE_SHA1="${CIRCLE_SHA1:?You must set CIRCLE_SHA1}"
 #     echo "Artifacts directory ($ARTIFACTS_DIR) does not exist."
 #     exit 1
 # fi
-version=$(awk -F' = ' '/MARKETING_VERSION/ {sub(/;/, "", $2); print $2}' ./Mist.xcodeproj/project.pbxproj | tail -n 1)
-build_number=$(agvtool what-version -terse)
+version="1.9.4"
+build_number="10"
 branch_name=$(git rev-parse --abbrev-ref HEAD)
 
 # Run the ghr command to create the release with the specified tag, title, and description

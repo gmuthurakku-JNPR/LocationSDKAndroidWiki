@@ -5,11 +5,11 @@ CIRCLE_PROJECT_REPONAME="${CIRCLE_PROJECT_REPONAME:?You must set CIRCLE_PROJECT_
 CIRCLE_SHA1="${CIRCLE_SHA1:?You must set CIRCLE_SHA1}"
 
 # Directory containing artifacts to upload
-ARTIFACTS_DIR="./artifacts"
-if [ ! -d "$ARTIFACTS_DIR" ]; then
-    echo "Artifacts directory ($ARTIFACTS_DIR) does not exist."
-    exit 1
-fi
+# ARTIFACTS_DIR="./artifacts"
+# if [ ! -d "$ARTIFACTS_DIR" ]; then
+#     echo "Artifacts directory ($ARTIFACTS_DIR) does not exist."
+#     exit 1
+# fi
 version=$(awk -F' = ' '/MARKETING_VERSION/ {sub(/;/, "", $2); print $2}' ./Mist.xcodeproj/project.pbxproj | tail -n 1)
 build_number=$(agvtool what-version -terse)
 branch_name=$(git rev-parse --abbrev-ref HEAD)
@@ -27,6 +27,5 @@ ghr -t "${GITHUB_TOKEN}" \
     -n "${release_title}" \
     -b "${release_body}" \
     "${version}-${build_number}" \
-    "$ARTIFACTS_DIR"
 
 echo "Release ${VERSION} created successfully with title '${RELEASE_TITLE}' and description '${RELEASE_DESCRIPTION}'."

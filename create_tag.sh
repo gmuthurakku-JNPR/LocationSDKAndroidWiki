@@ -1,20 +1,31 @@
-#!/bin/bash
+# Set variables
+GITHUB_TOKEN="${GITHUB_TOKEN:?You must set GITHUB_TOKEN}"
+CIRCLE_PROJECT_USERNAME="${CIRCLE_PROJECT_USERNAME:?You must set CIRCLE_PROJECT_USERNAME}"
+CIRCLE_PROJECT_REPONAME="${CIRCLE_PROJECT_REPONAME:?You must set CIRCLE_PROJECT_REPONAME}"
+CIRCLE_SHA1="${CIRCLE_SHA1:?You must set CIRCLE_SHA1}"
 
-# Check if both arguments are provided
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <base-branch> <target-branch>"
+# Directory containing artifacts to upload
+ARTIFACTS_DIR="./artifacts"
+if [ ! -d "$ARTIFACTS_DIR" ]; then
+    echo "Artifacts directory ($ARTIFACTS_DIR) does not exist."
     exit 1
 fi
+version=$(awk -F' = ' '/MARKETING_VERSION/ {sub(/;/, "", $2); print $2}' ./Mist.xcodeproj/project.pbxproj | tail -n 1)
+build_number=$(agvtool what-version -terse)
+branch_name=$(git rev-parse --abbrev-ref HEAD)
 
-# Assign arguments to variables
-BASE_BRANCH=$1
-TARGET_BRANCH=$2
+# Run the ghr command to create the release with the specified tag, title, and description
+release_title="${tag_name}"
+release_body=$(printf "## This build is uploaded from the _%s_ branch. \n\n ### It has fixes for:\n\n%s" "$branch_name" "$release_body")
 
-# Fetch the latest changes from the remote (optional, can be skipped if working locally)
-git fetch origin
+ghr -t "${GITHUB_TOKEN}" \
+    -u "${CIRCLE_PROJECT_USERNAME}" \
+    -r "${CIRCLE_PROJECT_REPONAME}" \
+    -c "${CIRCLE_SHA1}" \
+    -delete \
+    -n "${release_title}" \
+    -b "${release_body}" \
+    "${version}-${build_number}" \
+    "$ARTIFACTS_DIR"
 
-# Display commit descriptions (body) unique to the target branch compared to the base branch
-echo "Commit descriptions (optional) unique to branch '$TARGET_BRANCH' (compared to '$BASE_BRANCH'):"
-
-# List commits with only descriptions, skipping titles if the body is not empty
-git log "$BASE_BRANCH".."$TARGET_BRANCH" --pretty=format:"%h%n%b%n" | awk 'NF'
+echo "Release ${VERSION} created successfully with title '${RELEASE_TITLE}' and description '${RELEASE_DESCRIPTION}'."

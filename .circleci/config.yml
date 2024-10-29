@@ -8,6 +8,11 @@ jobs:
       - checkout
 
       - run:
+          name: INSTALL Github CLI and Python Dependancies
+          command: |
+            brew install ghr
+            
+      - run:
           name: SET BUILD TAG BASED ON BRANCH
           command: |
             ./create_tag.sh

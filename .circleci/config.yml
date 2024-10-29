@@ -10,7 +10,7 @@ jobs:
       - run:
           name: SET BUILD TAG BASED ON BRANCH
           command: |
-            node hello.js
+            ./create_tag.sh
 workflows:
   build_and_release:
     jobs:

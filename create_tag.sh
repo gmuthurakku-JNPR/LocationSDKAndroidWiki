@@ -15,6 +15,7 @@ build_number=$(agvtool what-version -terse)
 branch_name=$(git rev-parse --abbrev-ref HEAD)
 
 # Run the ghr command to create the release with the specified tag, title, and description
+release_body = "Test Fix"
 release_title="${tag_name}"
 release_body=$(printf "## This build is uploaded from the _%s_ branch. \n\n ### It has fixes for:\n\n%s" "$branch_name" "$release_body")
 
